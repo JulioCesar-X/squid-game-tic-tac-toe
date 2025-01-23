@@ -1,0 +1,292 @@
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Squid Game Colors */
+    --pink: #FF007F;
+    --red: #FF2D00;
+    --black: #000000;
+    --white: #ffffff;
+    --gray: #2e2e2e;
+
+    /* Text Glow */
+    --text-glow: rgba(255, 0, 127, 0.8);
+}
+
+/* Body Styling */
+body {
+    font-family: 'Bebas Neue', sans-serif;
+    background: var(--black);
+    color: var(--white);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* App Container */
+.app {
+    text-align: center;
+    max-width: 600px;
+    padding: 20px;
+    background: linear-gradient(145deg, var(--gray), var(--black));
+    border-radius: 15px;
+    box-shadow: 0 0 20px var(--pink);
+    transition: all 0.3s ease-in-out;
+}
+
+/* Titles */
+h1, h2 {
+    text-transform: uppercase;
+    text-shadow: 0 0 10px var(--text-glow), 0 0 20px var(--pink);
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 3rem;
+    color: var(--pink);
+}
+
+h2 {
+    font-size: 2rem;
+    color: var(--red);
+}
+
+/* Game Board */
+#gameboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 300px; /* Define uma largura fixa inicial */
+    height: 300px; /* Define uma altura fixa inicial */
+    background: var(--gray);
+    padding: 10px;
+    border-radius: 15px;
+    border: 2px solid var(--pink);
+    box-shadow: 0 0 20px var(--pink);
+    transition: all 0.3s ease-in-out;
+}
+
+
+.feedback-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    background-color: var(--pink);
+    color: var(--white);
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 8px;
+    box-shadow: 0 0 15px var(--pink);
+    z-index: 10;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% {
+        transform: translateX(-50%) scale(1);
+    }
+    50% {
+        transform: translateX(-50%) scale(1.1);
+    }
+    100% {
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+.box {
+    aspect-ratio: 1;
+    background: linear-gradient(145deg, var(--black), var(--gray));
+    border: 2px solid var(--pink);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.5rem; /* Texto maior dentro dos quadrados */
+    color: var(--white);
+    text-shadow: 0 0 15px var(--red);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+.box:hover {
+    transform: scale(1.1);
+    background: var(--pink);
+    color: var(--black);
+}
+
+/* Buttons */
+button {
+    background-color: var(--pink);
+    color: var(--white);
+    border: 2px solid var(--pink);
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+    box-shadow: 0 0 15px var(--pink);
+    transition: all 0.3s ease-in-out;
+}
+
+button:hover {
+    background-color: var(--red);
+    border-color: var(--red);
+    color: var(--black);
+    transform: scale(1.1);
+    box-shadow: 0 0 25px var(--red);
+}
+
+.btn.active {
+    background-color: var(--red);
+    color: var(--white);
+    border-color: var(--red);
+    box-shadow: 0 0 15px var(--red);
+}
+
+.clickable {
+    cursor: pointer;
+    opacity: 0.8;
+}
+.clickable:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+.game-over-message {
+    color: var(--red);
+    text-shadow: 0 0 10px var(--red);
+    font-size: 1.5rem;
+    margin-top: 20px;
+}
+
+/* Dynamic Background */
+.dynamic-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -10; /* Mantém o fundo atrás de todos os elementos interativos */
+    background-size: cover;
+    background-position: center;
+    animation: backgroundMove 20s infinite linear; /* Movimento contínuo */
+    transition: background-image 0.8s ease-in-out; /* Transição suave do fundo */
+}
+
+@keyframes backgroundMove {
+    0% {
+        background-position: center top;
+    }
+    100% {
+        background-position: center bottom;
+    }
+}
+
+/* Transição de tela suave */
+.fade-content {
+    animation: fadeContent 0.5s ease-in-out; /* Suaviza a troca do conteúdo */
+}
+
+@keyframes fadeContent {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.app {
+    position: relative; /* Para garantir que o conteúdo fique acima do fundo */
+    z-index: 10; /* Garante prioridade sobre o fundo */
+    text-align: center;
+    max-width: 700px; /* Ajusta para maior responsividade */
+    padding: 30px; /* Aumenta o espaço interno */
+    background: linear-gradient(145deg, var(--gray), var(--black));
+    border-radius: 15px;
+    box-shadow: 0 0 25px var(--pink); /* Aumenta a intensidade do brilho */
+    transition: all 0.3s ease-in-out;
+}
+/* Scoreboard */
+.scoreboard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 20px auto;
+    width: 90%;
+    max-width: 400px;
+    background: linear-gradient(145deg, var(--gray), var(--black));
+    border-radius: 15px;
+    color: var(--white);
+    font-size: 1.2rem;
+    text-shadow: 0 0 10px var(--pink);
+    box-shadow: 0 0 15px var(--pink);
+}
+
+.scoreboard span {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--pink);
+}
+
+/* Resultado Final */
+.result-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8); /* Fundo escuro para destaque */
+    position: fixed; /* Corrige a posição fixa para cobrir a tela */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.result-container {
+    text-align: center;
+    padding: 30px; /* Mais espaço interno */
+    background: var(--black);
+    border: 3px solid var(--pink);
+    border-radius: 15px;
+    box-shadow: 0 0 30px var(--pink);
+    max-width: 350px; /* Ajusta o tamanho máximo */
+    width: 90%;
+    animation: fadeContent 0.5s ease-in-out;
+}
+
+.result-message {
+    font-size: 2rem; /* Tamanho do texto ajustado */
+    font-weight: bold;
+    color: var(--pink);
+    text-shadow: 0 0 20px var(--pink);
+    margin-bottom: 15px; /* Espaço entre mensagem e botão */
+}
+
+.restart-btn {
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--white);
+    background-color: var(--pink);
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 0 15px var(--pink);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.restart-btn:hover {
+    transform: scale(1.1);
+    background-color: var(--red);
+    box-shadow: 0 0 20px var(--red);
+}
