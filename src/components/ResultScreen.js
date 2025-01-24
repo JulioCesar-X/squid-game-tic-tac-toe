@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { resetBoard } from '../redux/gameSlice';
 
@@ -13,20 +13,23 @@ const ResultScreen = ({ winner, onRestart }) => {
         if (mode === 'solo') {
             return winner === playerSymbol ? 'You Win!' : 'Computer Wins!';
         }
-        return winner === 'X' ? 'Player 1 Wins!' : 'Player 2 Wins!';
+        if (mode === 'two-players') {
+            return winner === 'X' ? 'Player 1 Wins!' : 'Player 2 Wins!';
+        }
+        return 'Unexpected Result'; // Fallback explícito
     };
 
-    // Função para tocar o som
-    const playResultSound = useCallback(() => {
-        const soundPath = winner ? '/assets/music/win.mp3' : '/assets/music/draw.mp3';
-        const audio = new Audio(soundPath);
-        audio.play();
-    }, [winner]);
-
-    // Toca o som ao montar o componente
-    useEffect(() => {
-        playResultSound();
-    }, [playResultSound]);
+    // Define quem será eliminado
+    const getEliminatedMessage = () => {
+        if (!winner) return 'Both players survive... for now.';
+        if (mode === 'solo') {
+            return winner === playerSymbol ? 'Computer will be eliminated!' : 'You will be eliminated!';
+        }
+        if (mode === 'two-players') {
+            return winner === 'X' ? 'Player 2 will be eliminated!' : 'Player 1 will be eliminated!';
+        }
+        return '';
+    };
 
     const handleRestart = () => {
         dispatch(resetBoard());
@@ -39,6 +42,9 @@ const ResultScreen = ({ winner, onRestart }) => {
                 <h2 className="result-message">
                     {getResultMessage()}
                 </h2>
+                <p className="eliminated-message">
+                    {getEliminatedMessage()}
+                </p>
                 <button className="restart-btn" onClick={handleRestart}>
                     Restart Game
                 </button>

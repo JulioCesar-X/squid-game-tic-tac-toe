@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { makeMove, setWinner } from '../redux/gameSlice';
 
-const GameBoard = ({ onGameOver }) => {
+const GameBoard = ({ onGameOver, onMove }) => {
     const {
         board,
         isGameActive,
@@ -19,9 +19,10 @@ const GameBoard = ({ onGameOver }) => {
 
     const dispatch = useDispatch();
 
-    const [feedbackMessage, setFeedbackMessage] = useState(''); // Feedback inicial
+    const [feedbackMessage, setFeedbackMessage] = useState('');
+    const [feedbackClass, setFeedbackClass] = useState(''); // Classe dinâmica para o feedback
 
-    const computerSymbol = playerSymbol === 'X' ? 'O' : 'X'; // Define o símbolo do computador
+    const computerSymbol = playerSymbol === 'X' ? 'O' : 'X';
 
     const winningCombinations = [
         [0, 1, 2],
@@ -34,26 +35,23 @@ const GameBoard = ({ onGameOver }) => {
         [2, 4, 6],
     ];
 
-    // Verifica as combinações vencedoras
     const checkWinner = useCallback(() => {
         for (let combination of winningCombinations) {
             const [a, b, c] = combination;
             if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                dispatch(setWinner(board[a])); // Define o vencedor
-                onGameOver(); // Notifica que o jogo terminou
+                dispatch(setWinner(board[a]));
+                onGameOver();
                 return;
             }
         }
 
         if (board.every((cell) => cell)) {
-            dispatch(setWinner(null)); // Define empate
+            dispatch(setWinner(null));
             onGameOver();
         }
     }, [board, dispatch, onGameOver]);
 
-    // Escolhe a próxima jogada do computador de forma inteligente
     const getBestMove = useCallback(() => {
-        // 1. Verifica se o computador pode vencer
         for (let combination of winningCombinations) {
             const [a, b, c] = combination;
             if (board[a] === computerSymbol && board[b] === computerSymbol && board[c] === null)
@@ -64,7 +62,6 @@ const GameBoard = ({ onGameOver }) => {
                 return a;
         }
 
-        // 2. Bloqueia o jogador se ele estiver prestes a vencer
         for (let combination of winningCombinations) {
             const [a, b, c] = combination;
             if (board[a] === playerSymbol && board[b] === playerSymbol && board[c] === null)
@@ -75,68 +72,77 @@ const GameBoard = ({ onGameOver }) => {
                 return a;
         }
 
-        // 3. Prioriza o centro
         if (board[4] === null) return 4;
 
-        // 4. Prioriza os cantos
         const corners = [0, 2, 6, 8];
         for (let corner of corners) {
             if (board[corner] === null) return corner;
         }
 
-        // 5. Escolhe qualquer célula livre
-        const emptyCells = board.map((value, index) => (value === null ? index : null)).filter((v) => v !== null);
-        if (emptyCells.length > 0) {
-            return emptyCells[0];
-        }
-
-        return null; // Nenhuma jogada possível
+        const emptyCells = board
+            .map((value, index) => (value === null ? index : null))
+            .filter((v) => v !== null);
+        return emptyCells.length > 0 ? emptyCells[0] : null;
     }, [board, computerSymbol, playerSymbol]);
 
-    // Realiza a jogada do computador com delay
     const handleComputerMove = useCallback(() => {
         if (mode === 'solo' && currentPlayer === computerSymbol && isGameActive) {
             setFeedbackMessage("Computer's Turn ...");
+            setFeedbackClass('feedback-computer');
 
             setTimeout(() => {
                 const bestMove = getBestMove();
                 if (bestMove !== null) {
                     dispatch(makeMove({ index: bestMove }));
+                    if (onMove) onMove();
                 }
-            }, 2000); // Delay de 2 segundos para simular pensamento
+            }, 2000);
         }
-    }, [mode, currentPlayer, isGameActive, getBestMove, dispatch, computerSymbol]);
+    }, [mode, currentPlayer, isGameActive, getBestMove, dispatch, computerSymbol, onMove]);
 
     useEffect(() => {
-        checkWinner(); // Verifica vencedor após cada movimento
+        checkWinner();
     }, [board, checkWinner]);
 
     useEffect(() => {
-        if (mode === 'solo') handleComputerMove(); // Ação automática para o computador
+        if (mode === 'solo') {
+            handleComputerMove();
+        }
     }, [board, mode, handleComputerMove]);
 
-    // Atualiza o feedback com animação de oscilação
     useEffect(() => {
         if (!isGameActive) return;
 
-        if (currentPlayer === playerSymbol) {
-            setFeedbackMessage('Your Turn ...');
-        } else if (currentPlayer === computerSymbol && mode === 'solo') {
-            setFeedbackMessage("Computer's Turn ...");
+        if (mode === 'two-players') {
+            if (currentPlayer === 'X') {
+                setFeedbackMessage('Player 1 Turn ...');
+                setFeedbackClass('feedback-player1');
+            } else {
+                setFeedbackMessage('Player 2 Turn ...');
+                setFeedbackClass('feedback-player2');
+            }
+        } else if (mode === 'solo') {
+            if (currentPlayer === playerSymbol) {
+                setFeedbackMessage('Your Turn ...');
+                setFeedbackClass('feedback-player1');
+            } else {
+                setFeedbackMessage("Computer's Turn ...");
+                setFeedbackClass('feedback-computer');
+            }
         }
     }, [currentPlayer, mode, isGameActive, playerSymbol, computerSymbol]);
 
-    // Manipula o clique em uma célula
     const handleBoxClick = (index) => {
-        if (!isGameActive || board[index] || (mode === 'solo' && currentPlayer === computerSymbol)) return; // Bloqueia interação inválida
-        dispatch(makeMove({ index })); // Realiza o movimento
+        if (!isGameActive || board[index] || (mode === 'solo' && currentPlayer === computerSymbol))
+            return;
+        dispatch(makeMove({ index }));
+        if (onMove) onMove();
     };
 
     return (
         <div className="game-container">
-            {/* Indicador de Feedback Temporário */}
             {isGameActive && (
-                <div className={`feedback-message`}>
+                <div className={`feedback-message ${feedbackClass}`}>
                     {feedbackMessage}
                 </div>
             )}
@@ -145,7 +151,7 @@ const GameBoard = ({ onGameOver }) => {
                 {board.map((value, index) => (
                     <div
                         key={index}
-                        className={`box ${!value && isGameActive ? 'clickable' : ''}`} // Adiciona destaque às células clicáveis
+                        className={`box ${!value && isGameActive ? 'clickable' : ''}`}
                         onClick={() => handleBoxClick(index)}
                     >
                         {value}
