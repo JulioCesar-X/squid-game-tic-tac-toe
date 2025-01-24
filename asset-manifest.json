@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/squid-game-tic-tac-toe/static/css/main.9a28ec71.css",
+    "main.js": "/squid-game-tic-tac-toe/static/js/main.312ae1b5.js",
+    "index.html": "/squid-game-tic-tac-toe/index.html",
+    "main.9a28ec71.css.map": "/squid-game-tic-tac-toe/static/css/main.9a28ec71.css.map",
+    "main.312ae1b5.js.map": "/squid-game-tic-tac-toe/static/js/main.312ae1b5.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.9a28ec71.css",
+    "static/js/main.312ae1b5.js"
+  ]
+}
