@@ -20,7 +20,8 @@ const GameBoard = ({ onGameOver, onMove }) => {
     const dispatch = useDispatch();
 
     const [feedbackMessage, setFeedbackMessage] = useState('');
-    const [feedbackClass, setFeedbackClass] = useState(''); // Classe dinâmica para o feedback
+    const [feedbackClass, setFeedbackClass] = useState('');
+    const [winningCombination, setWinningCombination] = useState(null); // Combinação vencedora
 
     const computerSymbol = playerSymbol === 'X' ? 'O' : 'X';
 
@@ -35,19 +36,25 @@ const GameBoard = ({ onGameOver, onMove }) => {
         [2, 4, 6],
     ];
 
+    // Verifica o vencedor e aplica um destaque antes de finalizar o jogo
     const checkWinner = useCallback(() => {
         for (let combination of winningCombinations) {
             const [a, b, c] = combination;
             if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                dispatch(setWinner(board[a]));
-                onGameOver();
+                setWinningCombination(combination); // Define a combinação vencedora
+                setTimeout(() => {
+                    dispatch(setWinner(board[a]));
+                    onGameOver();
+                }, 3500); // Aguarda 2 segundos para exibir o destaque
                 return;
             }
         }
 
         if (board.every((cell) => cell)) {
-            dispatch(setWinner(null));
-            onGameOver();
+            setTimeout(() => {
+                dispatch(setWinner(null));
+                onGameOver();
+            }, 2000); // Em caso de empate, aguarda 2 segundos antes de finalizar
         }
     }, [board, dispatch, onGameOver]);
 
@@ -151,7 +158,9 @@ const GameBoard = ({ onGameOver, onMove }) => {
                 {board.map((value, index) => (
                     <div
                         key={index}
-                        className={`box ${!value && isGameActive ? 'clickable' : ''}`}
+                        className={`box ${
+                            winningCombination?.includes(index) ? 'winning-box' : ''
+                        } ${!value && isGameActive ? 'clickable' : ''}`}
                         onClick={() => handleBoxClick(index)}
                     >
                         {value}
