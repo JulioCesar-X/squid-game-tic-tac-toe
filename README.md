@@ -23,7 +23,7 @@ A **futuristic Tic Tac Toe game** inspired by the iconic **Squid Game** series. 
 
 ## Technologies Used
 - **Frontend**:
-  - React 17
+  - React 18
   - Redux (State Management)
   - Bootstrap (Responsive Design)
 - **Styling**:

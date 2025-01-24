@@ -1,66 +1,124 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { CSSTransition } from 'react-transition-group';
 import { useDispatch } from 'react-redux';
 import { setMode, setPlayerSymbol, startGame } from '../redux/gameSlice';
 
 const PlayerSelection = ({ onStartGame }) => {
     const dispatch = useDispatch();
-    const [mode, setLocalMode] = useState(null); // Gerencia o modo localmente
-    const [symbol, setLocalSymbol] = useState(null); // Gerencia o símbolo localmente
-    const [currentPlayer, setCurrentPlayer] = useState('Player 1'); // Rastreia o jogador atual (Player 1 ou Player 2)
-    const [playerSymbols, setPlayerSymbols] = useState({}); // Rastreia os símbolos atribuídos
-    const [isTwoPlayerSymbolsConfirmed, setIsTwoPlayerSymbolsConfirmed] = useState(false); // Confirmação dos símbolos no modo two-players
+    const [mode, setModeState] = useState(null);
+    const [symbol, setSymbolState] = useState(null);
+    const [playerSymbols, setPlayerSymbols] = useState({});
+    const [isTwoPlayerSymbolsConfirmed, setSymbolsConfirmed] = useState(false);
+    const [showIntro, setShowIntro] = useState(true);
 
-    // Atualiza o modo e verifica a inicialização
-    const handleModeSelection = (selectedMode) => {
-        setLocalMode(selectedMode);
-        dispatch(setMode(selectedMode));
-    };
+    const introAudioRef = useRef(null);
 
-    // Atualiza o símbolo no modo two-players
-    const handleTwoPlayerSymbolSelection = (selectedSymbol) => {
-        // Atribui o símbolo ao jogador atual
-        setPlayerSymbols((prevSymbols) => ({
-            ...prevSymbols,
-            [currentPlayer]: selectedSymbol,
-        }));
+    // Configura o áudio de introdução
+    useEffect(() => {
+        introAudioRef.current = new Audio(`${process.env.PUBLIC_URL}/assets/music/intro.mp3`);
+        introAudioRef.current.loop = true;
 
-        // Alterna entre os jogadores
-        if (currentPlayer === 'Player 1') {
-            setCurrentPlayer('Player 2');
-        } else {
-            // Ambos os jogadores fizeram suas escolhas
-            setIsTwoPlayerSymbolsConfirmed(true);
+        // Tenta reproduzir automaticamente
+        introAudioRef.current
+            .play()
+            .catch(() => {
+                console.log('Áudio bloqueado pelo navegador. Clique para reproduzir.');
+            });
+
+        return () => {
+            if (introAudioRef.current) {
+                introAudioRef.current.pause();
+                introAudioRef.current.currentTime = 0;
+            }
+        };
+    }, []);
+
+    // Função para reproduzir o áudio ao clicar no ícone
+    const playIntroAudio = () => {
+        if (introAudioRef.current) {
+            introAudioRef.current.play().catch((error) => console.error('Erro ao tocar som:', error));
         }
     };
 
-    // Atualiza o símbolo no modo solo
-    const handleSoloSymbolSelection = (selectedSymbol) => {
-        setLocalSymbol(selectedSymbol);
-
-        // Atribui os símbolos para o jogador e o computador
-        const computerSymbol = selectedSymbol === 'X' ? 'O' : 'X';
-        setPlayerSymbols({
-            Player: selectedSymbol,
-            Computer: computerSymbol,
-        });
+    // Define o modo de jogo e atualiza o estado global
+    const handleModeSelection = (selectedMode) => {
+        setModeState(selectedMode);
+        dispatch(setMode(selectedMode));
     };
 
-    // Inicia o jogo no modo two-players
-    const handleTwoPlayerStartGame = () => {
-        dispatch(setPlayerSymbol(playerSymbols['Player 1'])); // Define o símbolo do Player 1 no Redux
+    const handleSymbolSelection = (selectedSymbol, isTwoPlayer) => {
+        if (isTwoPlayer) {
+            setPlayerSymbols({
+                Player1: selectedSymbol,
+                Player2: selectedSymbol === 'X' ? 'O' : 'X',
+            });
+            setSymbolsConfirmed(true);
+        } else {
+            setSymbolState(selectedSymbol);
+            setPlayerSymbols({
+                Player: selectedSymbol,
+                Computer: selectedSymbol === 'X' ? 'O' : 'X',
+            });
+        }
+    };
+
+    const startGameHandler = () => {
+        const playerSymbolToSet = mode === 'solo' ? symbol : playerSymbols.Player1;
+        dispatch(setPlayerSymbol(playerSymbolToSet));
         dispatch(startGame());
         onStartGame();
+
+        if (introAudioRef.current) {
+            introAudioRef.current.pause();
+            introAudioRef.current.currentTime = 0;
+        }
     };
 
-    // Inicia o jogo no modo solo
-    const handleSoloStartGame = () => {
-        dispatch(setPlayerSymbol(symbol)); // Define o símbolo do jogador no Redux
-        dispatch(startGame());
-        onStartGame();
-    };
+    const renderSymbolButtons = (isTwoPlayer) => (
+        <div className="d-flex justify-content-center">
+            <button
+                className={`btn btn-success m-2 ${
+                    (isTwoPlayer ? playerSymbols.Player1 : symbol) === 'X' ? 'active' : ''
+                }`}
+                onClick={() => handleSymbolSelection('X', isTwoPlayer)}
+            >
+                X
+            </button>
+            <button
+                className={`btn btn-danger m-2 ${
+                    (isTwoPlayer ? playerSymbols.Player1 : symbol) === 'O' ? 'active' : ''
+                }`}
+                onClick={() => handleSymbolSelection('O', isTwoPlayer)}
+            >
+                O
+            </button>
+        </div>
+    );
 
-    return (
-        <div className="player-selection text-center">
+    const renderIntro = () => (
+        <CSSTransition in={showIntro} timeout={1500} classNames="fade" unmountOnExit>
+            <div className="intro">
+                <h1 className="squid-title">Welcome Players</h1>
+                <h2 className="squid-subtitle">to the Tic Tac Toe Squid Game</h2>
+                <p className="squid-message">"Let the game begin..."</p>
+                <button
+                    className="restart-btn mt-4"
+                    onClick={() => {
+                        setShowIntro(false);
+                        if (introAudioRef.current) {
+                            introAudioRef.current.pause();
+                            introAudioRef.current.currentTime = 0;
+                        }
+                    }}
+                >
+                    Start Game
+                </button>
+            </div>
+        </CSSTransition>
+    );
+
+    const renderModeSelection = () => (
+        <div>
             <h1 className="text-pink">Choose Game Mode</h1>
             <div className="d-flex justify-content-center mt-4">
                 <button
@@ -76,28 +134,16 @@ const PlayerSelection = ({ onStartGame }) => {
                     Two Players
                 </button>
             </div>
+        </div>
+    );
 
-            {/* Escolha de símbolos para o modo solo */}
-            {mode === 'solo' && (
-                <>
+    const renderSymbolSelection = () => {
+        if (mode === 'solo') {
+            return (
+                <div>
                     <h2 className="mt-4 text-red">Select Your Symbol</h2>
-                    <div className="d-flex justify-content-center">
-                        <button
-                            className={`btn btn-success m-2 ${symbol === 'X' ? 'active' : ''}`}
-                            onClick={() => handleSoloSymbolSelection('X')}
-                        >
-                            X
-                        </button>
-                        <button
-                            className={`btn btn-danger m-2 ${symbol === 'O' ? 'active' : ''}`}
-                            onClick={() => handleSoloSymbolSelection('O')}
-                        >
-                            O
-                        </button>
-                    </div>
-
-                    {/* Mostra os símbolos designados após a escolha */}
-                    {playerSymbols.Player && (
+                    {renderSymbolButtons(false)}
+                    {symbol && (
                         <div className="mt-4">
                             <p>
                                 <strong>You:</strong> {playerSymbols.Player}
@@ -105,70 +151,52 @@ const PlayerSelection = ({ onStartGame }) => {
                             <p>
                                 <strong>Computer:</strong> {playerSymbols.Computer}
                             </p>
-                            <button
-                                className="btn btn-primary mt-3"
-                                onClick={handleSoloStartGame}
-                            >
+                            <button className="btn btn-primary mt-3" onClick={startGameHandler}>
                                 Start Game
                             </button>
                         </div>
                     )}
-                </>
-            )}
+                </div>
+            );
+        }
 
-            {/* Escolha de símbolos para o modo two-players */}
-            {mode === 'two-players' && (
-                <>
+        if (mode === 'two-players') {
+            return (
+                <div>
                     {!isTwoPlayerSymbolsConfirmed ? (
-                        <>
-                            <h2 className="mt-4 text-red">
-                                {currentPlayer}, select your symbol:
-                            </h2>
-                            <div className="d-flex justify-content-center">
-                                <button
-                                    className={`btn btn-success m-2 ${
-                                        playerSymbols[currentPlayer] === 'X' ? 'active' : ''
-                                    }`}
-                                    onClick={() => handleTwoPlayerSymbolSelection('X')}
-                                    disabled={
-                                        currentPlayer === 'Player 2' &&
-                                        playerSymbols['Player 1'] === 'X'
-                                    } // Impede que ambos escolham o mesmo símbolo
-                                >
-                                    X
-                                </button>
-                                <button
-                                    className={`btn btn-danger m-2 ${
-                                        playerSymbols[currentPlayer] === 'O' ? 'active' : ''
-                                    }`}
-                                    onClick={() => handleTwoPlayerSymbolSelection('O')}
-                                    disabled={
-                                        currentPlayer === 'Player 2' &&
-                                        playerSymbols['Player 1'] === 'O'
-                                    } // Impede que ambos escolham o mesmo símbolo
-                                >
-                                    O
-                                </button>
-                            </div>
-                        </>
+                        <div>
+                            <h2 className="mt-4 text-red">Player 1, select your symbol:</h2>
+                            {renderSymbolButtons(true)}
+                        </div>
                     ) : (
                         <div className="mt-4">
                             <p>
-                                <strong>Player 1:</strong> {playerSymbols['Player 1']}
+                                <strong>Player 1:</strong> {playerSymbols.Player1}
                             </p>
                             <p>
-                                <strong>Player 2:</strong> {playerSymbols['Player 2']}
+                                <strong>Player 2:</strong> {playerSymbols.Player2}
                             </p>
-                            <button
-                                className="btn btn-primary mt-3"
-                                onClick={handleTwoPlayerStartGame}
-                            >
+                            <button className="btn btn-primary mt-3" onClick={startGameHandler}>
                                 Start Game
                             </button>
                         </div>
                     )}
-                </>
-            )}
+                </div>
+            );
+        }
+    };
+
+    return (
+        <div className="player-selection text-center">
+            <button
+                className="audio-icon"
+                onClick={playIntroAudio}
+                title="Play Intro Sound"
+            >
+                🔊
+            </button>
+            {showIntro ? renderIntro() : renderModeSelection()}
+            {!showIntro && mode && renderSymbolSelection()}
         </div>
     );
 };
